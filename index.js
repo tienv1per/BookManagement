@@ -7,7 +7,7 @@ const AuthRouter = require("./routes/AuthRoute");
 dotenv.config();
 const app = express();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8000;
 const MONGO = process.env.MONGO;
 
 const connect = async () => {
