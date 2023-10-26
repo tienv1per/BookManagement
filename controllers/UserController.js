@@ -1,11 +1,18 @@
+const bcrypt = require('bcrypt');
 const UserModel = require('../models/users');
 
 module.exports.updateUser = async(req, res, next) => {
     const id = req.params.id;
+    const updateData = req.body;
     try {
+        if (updateData.password) {
+            const salt = await bcrypt.genSalt(10);
+            const hashed = await bcrypt.hash(updateData.password, salt);
+            updateData.password = hashed;
+        }
         const updatedUser = await UserModel.findByIdAndUpdate(
             id,
-            {$set: req.body},
+            {$set: updateData},
             {new: true}
         );
         return res.status(200).json({
@@ -18,5 +25,16 @@ module.exports.updateUser = async(req, res, next) => {
             message: error.message,
             success: false,
         });
+    }
+};
+
+module.exports.getUser = async(req, res, next) => {
+    const id = req.params.id;
+
+    try {
+        const user = await UserModel.findById(id);
+        return res.status(200).json(user);
+    } catch (error) {
+        return res.status(500).json(error.message);
     }
 }

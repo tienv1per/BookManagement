@@ -19,6 +19,7 @@ module.exports.registerUser = async(req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);
     const newUser = await UserModel({email, password: hashed, name});
+    console.log(newUser);
 
     try {
         const oldUser = await UserModel.findOne({email: email});
