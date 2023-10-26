@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const AuthRouter = require("./routes/AuthRoute");
+const UserRouter = require("./routes/UserRoute");
 
 dotenv.config();
 const app = express();
@@ -25,6 +26,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/auth", AuthRouter);
+app.use("/users", UserRouter);
 
 app.listen(PORT, (req, res) => {
     connect();
