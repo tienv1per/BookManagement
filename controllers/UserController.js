@@ -37,4 +37,24 @@ module.exports.getUser = async(req, res, next) => {
     } catch (error) {
         return res.status(500).json(error.message);
     }
-}
+};
+
+module.exports.getAllUsers = async(req, res, next) => {
+    try {
+        const users = await UserModel.find();
+        return res.status(200).json(users);
+    } catch (error) {
+        return res.status(500).json(error.message);
+    }
+};
+
+module.exports.deleteUser = async(req, res, next) => {
+    try {
+        await UserModel.findByIdAndDelete(
+            req.params.id, 
+        );
+        return res.status(200).json("DELETE SUCCESSFULLY");
+    } catch (error) {
+        return res.status(500).json(error.message);
+    }
+};
