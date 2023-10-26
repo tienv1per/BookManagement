@@ -44,5 +44,52 @@ module.exports.registerUser = async(req, res, next) => {
 }
 
 module.exports.loginUser = async(req, res, next) => {
+    const {email, password} = req.body;
+    if(email === "" || password === ""){
+        return res.status(201).json({
+            message: "Please fill all required fields",
+            success: false,
+        });
+    }
 
+    try {
+        const user = await UserModel.findOne({email});
+        if(user){
+            const isValid = await bcrypt.compare(password, user.password);
+            if(isValid){
+                const token = jwt.sign({
+                    email: user.email,
+                    id: user._id,
+                    isAdmin: user.isAdmin
+                }, JWT_TOKEN);
+
+                return res
+                        .cookie("authenToken", token, {
+                            httpOnly: true,
+                        })
+                        .status(200)
+                        .json({
+                            message: "Login successfully",
+                            user: user,
+                            token: token,
+                            success: true
+                        });
+            } else {
+                return response.status(200).json({
+                    message: "Wrong password",
+                    success: false,
+                });
+            }
+        } else {
+            return response.status(200).json({
+                message: "User not found",
+                success: false,
+            });
+        }
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message,
+            success: false,
+        });
+    }
 }
