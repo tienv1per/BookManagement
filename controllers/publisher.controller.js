@@ -1,13 +1,19 @@
 const publisher = require('../models/publisher.model');
 
-exports.getPublisher = (req, res) => {
-    publisher.find({}, (err, docs) => {
-        if(err) {
-            console.log(err);
+exports.getPublisher = async (req, res) => {
+    try {
+        const docs = await publisher.find({});
+
+        if (docs.length === 0) {
+            res.status(404).json({ error: 'No publishers found' });
+        } else {
+            res.status(200).json({ data: docs });
         }
-        res.status(200).json({data: docs})
-    })
-}
+    } catch (err) {
+        console.error('Error in find:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
 
 exports.getAll = async (req, res) => {
     if(typeof req.params.page === 'undefined'){
