@@ -10,5 +10,6 @@ router.get("/:id", book_controller.getBookByID);
 router.get("/related/:bookId", book_controller.getRelatedBook);
 router.post("/comment/:id", book_controller.createComment);
 router.delete("/comment/:id", book_controller.deleteComment);
+router.patch("/comment/:id", book_controller.updateComment);
 
 module.exports = router;

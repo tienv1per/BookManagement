@@ -340,9 +340,9 @@ exports.getRelatedBook = async (req, res) => {
 
 exports.createComment = async (req, res, next) => {
   const bookId = req.params.id;
+  const token = req.headers.authorization.split(" ")[1];
 
   try {
-      const token = req.headers.authorization.split(" ")[1];
       const { content, score } = req.body;
       const decoded = jwtDecode(token);
 
@@ -384,4 +384,30 @@ exports.deleteComment = async (req, res, next) => {
             message: error.message,
         });
     }
+}
+
+exports.updateComment = async (req, res, next) => {
+  const id = req.params.id;
+  const updateData = req.body;
+  const token = req.headers.authorization.split(" ")[1];
+  const decode = jwtDecode(token);
+
+  try {
+    const findComment = await commentModel.findById(id);
+    if(findComment.user_id !== decode.id) {
+      return res.status(401).json("You dont have permission to delete this comment");
+    }
+    const comment = await commentModel.findByIdAndUpdate(
+      id,
+      {$set: updateData},
+      {new: true}
+    );
+
+    return res.status(200).json({
+      comment: comment,
+      message: "Update comment successfully",
+    });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 }

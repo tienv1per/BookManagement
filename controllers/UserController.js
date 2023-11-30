@@ -17,7 +17,7 @@ module.exports.updateUser = async(req, res, next) => {
         );
         return res.status(200).json({
             user: updatedUser,
-            message: "Uupdate user successfully",
+            message: "Update user successfully",
             success: true
         });
     } catch (error) {
