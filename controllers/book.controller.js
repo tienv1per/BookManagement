@@ -353,7 +353,7 @@ exports.createComment = async (req, res, next) => {
         user_id: decoded.id,
       });
       await newComment.save();
-      
+
       await book.updateOne(
         { _id: bookId }, 
         { $push: { comments: newComment._id } });
@@ -362,4 +362,26 @@ exports.createComment = async (req, res, next) => {
       console.log("Error creating comment");
       return res.status(500).json(error);
   }
+}
+
+exports.deleteComment = async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const comment = await commentModel.findByIdAndDelete(id);
+        const bookFound = await book.findById(comment.book_id);
+        const updatedComments = bookFound.comments.filter(commentId => commentId.toString() !== id);
+        bookFound.comments = updatedComments;
+        await bookFound.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Delete comment successfully",
+            comment: comment,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
 }
