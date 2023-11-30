@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const cookieParser = require("cookie-parser");
 const AuthRouter = require("./routes/AuthRoute");
 const UserRouter = require("./routes/UserRoute");
 const authorRouter = require("./routes/author.router");
@@ -29,6 +30,7 @@ const connect = async () => {
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/auth", AuthRouter);
 app.use("/users", UserRouter);
