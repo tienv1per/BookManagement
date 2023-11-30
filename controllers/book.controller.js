@@ -410,4 +410,25 @@ exports.updateComment = async (req, res, next) => {
   } catch (error) {
     return res.status(500).json(error);
   }
-}
+};
+
+exports.getAllCommentsByBook = async (req, res, next) => {
+  const bookId = req.params.id;
+
+  try {
+    const comments = await commentModel.find({ book_id: bookId }).populate({
+        path: 'user_id',
+        model: 'Users', 
+        select: 'name email',
+        as: 'user', 
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Get comments successfully",
+        comments: comments,
+    });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
