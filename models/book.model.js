@@ -52,6 +52,12 @@ const book = new Schema({
             validator : Number.isInteger,
             message   : '{VALUE} is not an integer value'
         }
-    }
+    },
+    comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comments"
+      }
+    ],
 });
 module.exports = mongoose.model('book', book);
