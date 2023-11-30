@@ -1,8 +1,11 @@
+const { jwtDecode } = require('jwt-decode');
 
 const book = require('../models/book.model');
+const commentModel = require("../models/comment");
 const publisherController = require('../controllers/publisher.controller');
 const authorController = require('../controllers/author.controller');
 const categoryController = require('../controllers/category.controller');
+const users = require('../models/users');
 
 exports.getTotalPage = (req, res) => {
     book.find({}).exec()
@@ -332,4 +335,100 @@ exports.getRelatedBook = async (req, res) => {
         console.log(err);
         res.status(500).json({ msg: err });
     }
+};
+
+
+exports.createComment = async (req, res, next) => {
+  const bookId = req.params.id;
+  const token = req.headers.authorization.split(" ")[1];
+
+  try {
+      const { content, score } = req.body;
+      const decoded = jwtDecode(token);
+
+      const newComment = await commentModel({
+        content: content,
+        score: score,
+        book_id: bookId,
+        user_id: decoded.id,
+      });
+      await newComment.save();
+
+      await book.updateOne(
+        { _id: bookId }, 
+        { $push: { comments: newComment._id } });
+      return res.status(200).json(newComment);
+  } catch (error) {
+      console.log("Error creating comment");
+      return res.status(500).json(error);
+  }
+}
+
+exports.deleteComment = async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const comment = await commentModel.findByIdAndDelete(id);
+        const bookFound = await book.findById(comment.book_id);
+        const updatedComments = bookFound.comments.filter(commentId => commentId.toString() !== id);
+        bookFound.comments = updatedComments;
+        await bookFound.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Delete comment successfully",
+            comment: comment,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+
+exports.updateComment = async (req, res, next) => {
+  const id = req.params.id;
+  const updateData = req.body;
+  const token = req.headers.authorization.split(" ")[1];
+  const decode = jwtDecode(token);
+
+  try {
+    const findComment = await commentModel.findById(id);
+    if(findComment.user_id !== decode.id) {
+      return res.status(401).json("You dont have permission to delete this comment");
+    }
+    const comment = await commentModel.findByIdAndUpdate(
+      id,
+      {$set: updateData},
+      {new: true}
+    );
+
+    return res.status(200).json({
+      comment: comment,
+      message: "Update comment successfully",
+    });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+exports.getAllCommentsByBook = async (req, res, next) => {
+  const bookId = req.params.id;
+
+  try {
+    const comments = await commentModel.find({ book_id: bookId }).populate({
+        path: 'user_id',
+        model: 'Users', 
+        select: 'name email',
+        as: 'user', 
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Get comments successfully",
+        comments: comments,
+    });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 };
