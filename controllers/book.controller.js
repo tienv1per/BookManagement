@@ -1,8 +1,11 @@
+const { jwtDecode } = require('jwt-decode');
 
 const book = require('../models/book.model');
+const commentModel = require("../models/comment");
 const publisherController = require('../controllers/publisher.controller');
 const authorController = require('../controllers/author.controller');
 const categoryController = require('../controllers/category.controller');
+const users = require('../models/users');
 
 exports.getTotalPage = (req, res) => {
     book.find({}).exec()
@@ -333,3 +336,30 @@ exports.getRelatedBook = async (req, res) => {
         res.status(500).json({ msg: err });
     }
 };
+
+
+exports.createComment = async (req, res, next) => {
+  const bookId = req.params.id;
+
+  try {
+      const token = req.headers.authorization.split(" ")[1];
+      const { content, score } = req.body;
+      const decoded = jwtDecode(token);
+
+      const newComment = await commentModel({
+        content: content,
+        score: score,
+        book_id: bookId,
+        user_id: decoded.id,
+      });
+      await newComment.save();
+      
+      await book.updateOne(
+        { _id: bookId }, 
+        { $push: { comments: newComment._id } });
+      return res.status(200).json(newComment);
+  } catch (error) {
+      console.log("Error creating comment");
+      return res.status(500).json(error);
+  }
+}

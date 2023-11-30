@@ -8,5 +8,6 @@ router.post("/category", book_controller.getBookByCategory);
 router.post("/author", book_controller.getBookByAuthor);
 router.get("/:id", book_controller.getBookByID);
 router.get("/related/:bookId", book_controller.getRelatedBook);
+router.post("/comment/:id", book_controller.createComment);
 
 module.exports = router;
