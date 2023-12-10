@@ -1,106 +1,85 @@
 
 const cart = require("../models/cart.model");
+const book = require("../models/book.model");
 exports.addToCart = async (req, res) => {
-  // if (
-  //   typeof req.body.id_user === "undefined" ||
-  //   typeof req.body.products === "undefined"
-  // ) {
-  //   res.status(422).json({ msg: "invalid data" });
-  //   return;
-  // }
-  // const { id_user, products } = req.body;
-  // var cartFind;
-  // try {
-  //   cartFind = await cart.findOne({ id_user: id_user} );
-  // } catch (err) {
-  //   const cart_new = new cart({
-  //     id_user: id_user,
-  //     products: products
-  //   });
-  //   let cartsave;
-  //   try {
-  //     cartsave = await cart_new.save();
-  //   } catch (err) {
-  //     res.status(500).json({ msg: err });
-  //     return;
-  //   }
-  //   return;
-  // }
-  // if (cartFind === null) {
-  //   const cart_new = new cart({
-  //     id_user: id_user,
-  //     products: products
-  //   });
-  //   let cartsave;
-  //   try {
-  //     cartsave = await cart_new.save();
-  //   } catch (err) {
-  //     res.status(500).json({ msg: err });
-  //     return;
-  //   }
-  //   return;
-  // }
-  // for (let i = 0; i < products.length; i++) {
-  //   let index = cartFind.products.findIndex(
-  //     element => products[i].name === element.name
-  //   );
-  //   if (index === -1) {
-  //     cartFind.products.push(products[i]);
-  //   //   console.log(cartFind.products);
-  //   } else {
-  //     cartFind.products[index].count += Number(products[i].count);
-  //   //   console.log(cartFind.products[index].count);
-  //   }
-  // }
-  const { id_user, products } = req.body;
+  if (
+    typeof req.body.id_user === "undefined" ||
+    typeof req.body.id_product === "undefined" ||
+    typeof req.body.count === "undefined"
+  ) {
+    res.status(422).json({ msg: "invalid data" });
+    return;
+  }
 
-try {
-  let cartFind = await cart.findOne({ id_user: id_user });
+  const { id_user, id_product, count } = req.body;
 
-  if (cartFind === null) {
-    // Nếu giỏ hàng không tồn tại, tạo giỏ hàng mới
-    const cart_new = new cart({
-      id_user: id_user,
-      products: products,
-    });
+  try {
+    let cartFind = await cart.findOne({ id_user: id_user });
+    let product_info = await book.findById(id_product);
 
+    if (cartFind === null) {
+      // Nếu giỏ hàng không tồn tại, tạo giỏ hàng mới
+      const cart_new = new cart({
+        id_user: id_user,
+        products: [
+          {
+            id_category: product_info.id_category,
+            name: product_info.name,
+            price: product_info.price,
+            release_date: product_info.release_date,
+            img: product_info.img,
+            describe: product_info.describe,
+            id_nsx: product_info.id_nsx,
+            count: count,
+            _id: product_info._id.toString(),
+          },
+        ],
+      });
+
+      try {
+        await cart_new.save();
+        res.status(200).json({ msg: 'Product(s) added to cart successfully' });
+      } catch (err) {
+        res.status(500).json({ msg: err });
+      }
+
+      return;
+    }
+
+    // Nếu giỏ hàng đã tồn tại, cập nhật thông tin sản phẩm
+    let productIndex = cartFind.products.findIndex(
+      (element) => element._id === id_product
+    );
+
+    if (productIndex === -1) {
+      // Nếu sản phẩm không tồn tại trong giỏ hàng, thêm mới vào mảng products
+      cartFind.products.push({
+        id_category: product_info.id_category,
+        name: product_info.name,
+        price: product_info.price,
+        release_date: product_info.release_date,
+        img: product_info.img,
+        describe: product_info.describe,
+        id_nsx: product_info.id_nsx,
+        count: count,
+        _id: product_info._id.toString(),
+      });
+    } else {
+      // Nếu sản phẩm đã tồn tại trong giỏ hàng, cập nhật số lượng
+      cartFind.products[productIndex].count += Number(count);
+    }
+
+    // Lưu lại giỏ hàng sau khi cập nhật thông tin sản phẩm
     try {
-      await cart_new.save();
+      await cartFind.save();
       res.status(200).json({ msg: 'Product(s) added to cart successfully' });
     } catch (err) {
       res.status(500).json({ msg: err });
     }
-
-    return;
-  }
-
-  // Nếu giỏ hàng đã tồn tại, cập nhật thông tin sản phẩm
-  for (let i = 0; i < products.length; i++) {
-    let index = cartFind.products.findIndex(
-      (element) => products[i].name === element.name
-    );
-
-    if (index === -1) {
-      // Nếu sản phẩm không tồn tại trong giỏ hàng, thêm mới vào mảng products
-      cartFind.products.push(products[i]);
-    } else {
-      // Nếu sản phẩm đã tồn tại trong giỏ hàng, cập nhật số lượng
-      cartFind.products[index].count += Number(products[i].count);
-    }
-  }
-
-  // Lưu lại giỏ hàng sau khi cập nhật thông tin sản phẩm
-  try {
-    await cartFind.save();
-    res.status(200).json({ msg: 'Product(s) added to cart successfully' });
   } catch (err) {
     res.status(500).json({ msg: err });
   }
-} catch (err) {
-  res.status(500).json({ msg: err });
 }
-
-  }
 
 
 
@@ -127,96 +106,99 @@ try {
   };
 
 
-exports.update = async (req, res) => {
-  if (
-    typeof req.body.id_user === "undefined" ||
-    typeof req.body.product === "undefined"
-  ) {
-    res.status(422).json({ msg: "invalid data" });
-    return;
-  }
-
-const { id_user, product } = req.body;
-
-try {
-  let cartFind = await cart.findOne({ id_user: id_user });
-
-  if (cartFind === null) {
-    // Nếu giỏ hàng không tồn tại, trả về mã lỗi 404
-    res.status(404).json({ msg: 'Cart not found' });
-    return;
-  }
-
-  // Tìm kiếm sản phẩm trong mảng products của giỏ hàng
-  let index = cartFind.products.findIndex(
-    (element) => element.name === product.name
-  );
-
-  if (index === -1) {
-    // Nếu sản phẩm không tồn tại trong giỏ hàng, trả về mã lỗi 404
-    res.status(404).json({ msg: 'Product not found in cart' });
-    return;
-  }
-
-  // Cập nhật số lượng của sản phẩm
-  cartFind.products[index].count = Number(product.count);
-
-  // Lưu lại giỏ hàng sau khi cập nhật thông tin sản phẩm
-  try {
-    await cartFind.save();
-    res.status(200).json({ msg: 'Update success' });
-  } catch (err) {
-    res.status(500).json({ msg: err });
-  }
-} catch (err) {
-  res.status(500).json({ msg: err });
-}
-
-};
-
-exports.delete = async (req, res) => {
-  if (
-    typeof req.body.id_user === "undefined" ||
-    typeof req.body.name === "undefined"
-  ) {
-    res.status(422).json({ msg: "invalid data" });
-    return;
-  }
-  const { id_user, name } = req.body;
-
-  try {
-    let cartFind = await cart.findOne({ id_user: id_user });
-  
-    if (cartFind === null) {
-      // Nếu giỏ hàng không tồn tại, trả về mã lỗi 404
-      res.status(404).json({ msg: 'Cart not found' });
+  exports.update = async (req, res) => {
+    if (
+      typeof req.body.id_user === "undefined" ||
+      typeof req.body.id_product === "undefined" ||
+      typeof req.body.count === "undefined"
+    ) {
+      res.status(422).json({ msg: "invalid data" });
       return;
     }
   
-    // Tìm kiếm sản phẩm trong mảng products của giỏ hàng
-    let index = cartFind.products.findIndex((element) => element.name === name);
+    const { id_user, id_product, count } = req.body;
   
-    if (index === -1) {
-      // Nếu sản phẩm không tồn tại trong giỏ hàng, trả về mã lỗi 404
-      res.status(404).json({ msg: 'Product not found in cart' });
-      return;
-    }
-  
-    // Xóa sản phẩm khỏi mảng products
-    cartFind.products.splice(index, 1);
-  
-    // Lưu lại giỏ hàng sau khi xóa sản phẩm
     try {
-      await cartFind.save();
-      res.status(200).json({ msg: 'Delete success' });
+      let cartFind = await cart.findOne({ id_user: id_user });
+  
+      if (cartFind === null) {
+        // Nếu giỏ hàng không tồn tại, trả về mã lỗi 404
+        res.status(404).json({ msg: 'Cart not found' });
+        return;
+      }
+  
+      // Tìm kiếm sản phẩm trong mảng products của giỏ hàng
+      let index = cartFind.products.findIndex(
+        (element) => element._id === id_product
+      );
+  
+      if (index === -1) {
+        // Nếu sản phẩm không tồn tại trong giỏ hàng, trả về mã lỗi 404
+        res.status(404).json({ msg: 'Product not found in cart' });
+        return;
+      }
+  
+      // Cập nhật số lượng của sản phẩm
+      cartFind.products[index].count = Number(count);
+  
+      // Lưu lại giỏ hàng sau khi cập nhật thông tin sản phẩm
+      try {
+        await cartFind.save();
+        res.status(200).json({ msg: 'Update success' });
+      } catch (err) {
+        res.status(500).json({ msg: err });
+      }
     } catch (err) {
       res.status(500).json({ msg: err });
     }
-  } catch (err) {
-    res.status(500).json({ msg: err });
-  }
+  };
   
-};
+
+  exports.delete = async (req, res) => {
+    if (
+      typeof req.body.id_user === "undefined" ||
+      typeof req.body.id_product === "undefined"
+    ) {
+      res.status(422).json({ msg: "invalid data" });
+      return;
+    }
+    const { id_user, id_product } = req.body;
+  
+    try {
+      let cartFind = await cart.findOne({ id_user: id_user });
+  
+      if (cartFind === null) {
+        // Nếu giỏ hàng không tồn tại, trả về mã lỗi 404
+        res.status(404).json({ msg: 'Cart not found' });
+        return;
+      }
+  
+      // Tìm kiếm sản phẩm trong mảng products của giỏ hàng
+      let index = cartFind.products.findIndex(
+        (element) => element._id === id_product
+      );
+  
+      if (index === -1) {
+        // Nếu sản phẩm không tồn tại trong giỏ hàng, trả về mã lỗi 404
+        res.status(404).json({ msg: 'Product not found in cart' });
+        return;
+      }
+  
+      // Xóa sản phẩm khỏi mảng products
+      cartFind.products.splice(index, 1);
+  
+      // Lưu lại giỏ hàng sau khi xóa sản phẩm
+      try {
+        await cartFind.save();
+        res.status(200).json({ msg: 'Delete success' });
+      } catch (err) {
+        res.status(500).json({ msg: err });
+      }
+    } catch (err) {
+      res.status(500).json({ msg: err });
+    }
+  };
+  
 
 exports.removeCartByIDUser = async (id_user) => {
   try {
