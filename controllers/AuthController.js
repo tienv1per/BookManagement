@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/users');
+const { jwtDecode } = require('jwt-decode');
 
 dotenv.config();
 
@@ -102,3 +103,8 @@ module.exports.loginUser = async(req, res, next) => {
         });
     }
 }
+
+module.exports.logoutUser = async(req, res, next) => {
+    res.clearCookie("authenToken");
+    return res.status(200).json("Logout successfully");
+};  
