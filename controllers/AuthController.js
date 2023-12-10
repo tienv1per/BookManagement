@@ -19,7 +19,6 @@ module.exports.registerUser = async(req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);
     const newUser = await UserModel({email, password: hashed, name});
-    console.log(newUser);
 
     try {
         const oldUser = await UserModel.findOne({email: email});
@@ -30,10 +29,14 @@ module.exports.registerUser = async(req, res, next) => {
             });
         }
         const savedUser = await newUser.save();
+        const { _id, ...userData}  = savedUser._doc; 
 
         return res.status(200).json({
             message: "User created successfully",
-            user: savedUser,
+            user: {
+                id: _id,
+                ...userData,
+            },
             success: true,
         });
     } catch (error) {
@@ -64,6 +67,8 @@ module.exports.loginUser = async(req, res, next) => {
                     isAdmin: user.isAdmin
                 }, JWT_TOKEN);
 
+                const { _id, ...userData}  = user._doc; 
+
                 return res
                         .cookie("authenToken", token, {
                             httpOnly: true,
@@ -71,24 +76,27 @@ module.exports.loginUser = async(req, res, next) => {
                         .status(200)
                         .json({
                             message: "Login successfully",
-                            user: user,
+                            user: {
+                                id: user._id,
+                                ...userData,
+                            },
                             token: token,
                             success: true
                         });
             } else {
-                return response.status(200).json({
+                return res.status(200).json({
                     message: "Wrong password",
                     success: false,
                 });
             }
         } else {
-            return response.status(200).json({
+            return res.status(200).json({
                 message: "User not found",
                 success: false,
             });
         }
     } catch (error) {
-        return response.status(500).json({
+        return res.status(500).json({
             message: error.message,
             success: false,
         });

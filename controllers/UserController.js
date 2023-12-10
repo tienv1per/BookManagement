@@ -15,8 +15,14 @@ module.exports.updateUser = async(req, res, next) => {
             {$set: updateData},
             {new: true}
         );
+
+        const { _id, ...userData } = updatedUser._doc;
+
         return res.status(200).json({
-            user: updatedUser,
+            user: {
+                id: _id,
+                ...userData,
+            },
             message: "Update user successfully",
             success: true
         });
@@ -33,7 +39,11 @@ module.exports.getUser = async(req, res, next) => {
 
     try {
         const user = await UserModel.findById(id);
-        return res.status(200).json(user);
+        const { _id, ...userData } = user._doc;
+        return res.status(200).json({
+            id: _id,
+            ...userData,
+        });
     } catch (error) {
         return res.status(500).json(error.message);
     }
