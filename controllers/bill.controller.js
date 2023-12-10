@@ -1,67 +1,90 @@
 
 const bill = require("../models/bill.model");
+const book = require("../models/book.model");
 const cart = require("../models/cart.model");
 const randomstring = require("randomstring");
 // const nodemailer = require("../utils/nodemailer");
 
 
 exports.addBill = async (req, res) => {
-  if (
-    typeof req.body.id_user === "undefined" ||
-    typeof req.body.address === "undefined" ||
-    typeof req.body.phone === "undefined" ||
-    typeof req.body.name === "undefined" ||
-    typeof req.body.total === "undefined" ||
-    typeof req.body.email === "undefined"
-  ) {
-    res.status(422).json({ msg: "Invalid data" });
-    return;
-  }
-  const { id_user, address, total, phone, name, email } = req.body;
-  var cartFind = null;
-  try {
-    cartFind = await cart.findOne({ id_user: id_user });
-  } catch (err) {
-    console.log("error ", err);
-    res.status(500).json({ msg: err });
-    return;
-  }
-  if (cartFind === null) {
-    res.status(404).json({ msg: "cart not found" });
-    return;
-  }
-  const token = randomstring.generate();
-  const new_bill = new bill({
-    id_user: id_user,
-    products: cartFind.products,
-    address: address,
-    phone: phone,
-    name: name,
-    total,
-    token,
-  });
-  // try {
-    // await cartFind.remove();
-  // } catch (err) {
-  //   res.status(500).json({ msg: err });
-  //   console.log("cart remove fail");
-  //   return;
-  // }
-  // try {
-  //   await cart.deleteOne({ _id: cartFind._id });
-  // } catch (err) {
-  //   console.error(err);
-  //   res.status(500).json({ msg: 'server error' });
-  // }
-  try {
-    new_bill.save();
-  } catch (err) {
-    res.status(500).json({ msg: err });
-    console.log("save bill fail");
-    return;
-  }
-  res.status(201).json({ msg: "success" });
-};
+    if (
+      typeof req.body.id_user === "undefined" ||
+      typeof req.body.address === "undefined" ||
+      typeof req.body.phone === "undefined" ||
+      typeof req.body.name === "undefined" ||
+      typeof req.body.total === "undefined" ||
+      typeof req.body.email === "undefined" ||
+      typeof req.body.id_product === "undefined"
+    ) {
+      res.status(422).json({ msg: "Invalid data" });
+      return;
+    }
+  
+    const { id_user, address, total, phone, name, email, id_product } = req.body;
+  
+    try {
+      // Kiểm tra xem giỏ hàng của người dùng có tồn tại không
+      const cartFind = await cart.findOne({ id_user: id_user });
+  
+      if (cartFind === null) {
+        res.status(404).json({ msg: "Cart not found" });
+        return;
+      }
+  
+      // Tìm thông tin sản phẩm theo id_product
+      const product_info = await book.findOne({ _id: id_product });
+  
+      // Kiểm tra xem sản phẩm có tồn tại không
+      if (product_info === null) {
+        res.status(404).json({ msg: "Product not found" });
+        return;
+      }
+  
+      // Tạo mã token ngẫu nhiên cho hóa đơn
+      const token = randomstring.generate();
+      const productIndex = cartFind.products.findIndex(
+        (element) => element._id === id_product
+      );
+      console.log(cartFind.products[productIndex].count);
+      // Tạo đối tượng hóa đơn mới
+      const new_bill = new bill({
+        id_user: id_user,
+        products: { id_category: product_info.id_category,
+            name: product_info.name,
+            price: product_info.price,
+            release_date: product_info.release_date,
+            img: product_info.img,
+            describe: product_info.describe,
+            id_nsx: product_info.id_nsx,
+            count: cartFind.products[productIndex].count}, // Sử dụng mảng để chứa thông tin sản phẩm và số lượng
+        address: address,
+        phone: phone,
+        name: name,
+        email: email,
+        total: total,
+        token: token,
+        // count: cartFind.products[productIndex].count
+      });
+  
+      // Lưu hóa đơn vào cơ sở dữ liệu
+      await new_bill.save();
+  
+      // Xóa sản phẩm từ giỏ hàng sau khi tạo hóa đơn
+ 
+  
+      if (productIndex !== -1) {
+        cartFind.products.splice(productIndex, 1);
+        await cartFind.save();
+      }
+  
+      // Trả về thành công
+      res.status(201).json({ msg: "Success" });
+    } catch (err) {
+      console.log("Error:", err);
+      res.status(500).json({ msg: "Internal Server Error" });
+    }
+  };
+  
 
 exports.verifyPayment = async (req, res) => {
   if (typeof req.params.token === "undefined") {
@@ -252,79 +275,6 @@ exports.statisticaRevenueYear = async (req, res) => {
 };
 
 
-// exports.statisticaRevenueQuauter = async (req, res) => {
-//   if (
-//     typeof req.body.year === "undefined" ||
-//     typeof req.body.quauter === "undefined"
-//   ) {
-//     res.status(402).json({ msg: "data invalid" });
-//     return;
-//   }
-//   let { year, quauter } = req.body;
-//   if (quauter < 1 || quauter > 4) {
-//     res.status(402).json({ msg: "data invalid" });
-//     return;
-//   }
-//   let start = 1,
-//     end = 4;
-//   if (parseInt(quauter) === 2) {
-//     start = 4;
-//     end = 7;
-//   }
-//   if (parseInt(quauter) === 3) {
-//     start = 7;
-//     end = 10;
-//   }
-//   if (parseInt(quauter) === 3) {
-//     start = 10;
-//     end = 13;
-//   }
-//   let billFind = null;
-//   try {
-//     billFind = await bill.find({
-//       date: {
-//         $gte: new Date(year, start - 1, 1),
-//         $lt: new Date(year, end - 1, 1),
-//       },
-//       issend: "1",
-//     });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).msg({ msg: err });
-//     return;
-//   }
-//   res.status(200).json({ data: billFind });
-// };
-
-
-// exports.getBillNoVerify = async (req, res) => {
-//   let count = null;
-//   try {
-//     count = await bill.count({ issend: "99" });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({ msg: err });
-//     return;
-//   }
-//   let totalPage = parseInt((count - 1) / 9 + 1);
-//   let { page } = req.params;
-//   if (parseInt(page) < 1 || parseInt(page) > totalPage) {
-//     res.status(200).json({ data: [], msg: "Invalid page", totalPage });
-//     return;
-//   }
-//   bill
-//     .find({ issend: "99" })
-//     .skip(9 * (parseInt(page) - 1))
-//     .limit(9)
-//     .exec((err, docs) => {
-//       if (err) {
-//         console.log(err);
-//         res.status(500).json({ msg: err });
-//         return;
-//       }
-//       res.status(200).json({ data: docs, totalPage });
-//     });
-// };
 
 exports.getBillNoVerify = async (req, res) => {
   try {
