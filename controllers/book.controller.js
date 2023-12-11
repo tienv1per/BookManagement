@@ -93,7 +93,7 @@ exports.getAllBook = async (req, res) => {
 
 
 exports.getBookByID = async (req, res) => {
-    if (req.query.id === 'undefined') {
+    if (req.params.id === 'undefined') {
         res.status(422).json({ msg: 'Invalid data' });
         return;
     }
@@ -107,18 +107,36 @@ exports.getBookByID = async (req, res) => {
         return;
     }
 
-    if (result === null) {
+    if (!result) {
         res.status(404).json({ msg: "not found" });
         return;
     }
 
-    // Tăng giá trị của view_counts
-    result.view_counts = result.view_counts + 1;
-
     try {
-        // Sử dụng async/await để đợi cho việc save
+        // Tăng giá trị của view_counts
+        result.view_counts += 1;
         await result.save();
-        res.status(200).json({ data: result });
+        // // Lấy thông tin tác giả, danh mục
+        const authorInfo = await author.findById(result.id_author);
+        const nsxInfo = await nsx.findById(result.id_nsx); 
+        const categoryInfo = await category.findById(result.id_category);
+
+
+        // Trả về thông tin sách
+        res.status(200).json({
+            "id": result._id,
+            "release_date": result.release_date,
+            "describe": result.describe,
+            "view_counts": result.view_counts,
+            "sales": result.sales,
+            "category": categoryInfo.name,
+            "name": result.name,
+            "price": result.price,
+            "img": result.img,
+            "nsx": nsxInfo.name,
+            "author": authorInfo.name,
+            "comments": []
+        });
     } catch (err) {
         console.log(err);
         res.status(500).json({ msg: err });
