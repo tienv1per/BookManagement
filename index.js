@@ -10,6 +10,8 @@ const bookRouter = require("./routes/book.router");
 const publisherRouter = require("./routes/publisher.router");
 const adminRouter = require('./routes/admin.router');
 const categoryRouter = require('./routes/category.router');
+const billRouter = require('./routes/bill.router');
+const cartRouter =  require('./routes/cart.router');
 
 dotenv.config();
 const app = express();
@@ -40,6 +42,8 @@ app.use("/book", bookRouter);
 app.use("/publisher", publisherRouter);
 app.use("/admin", adminRouter);
 app.use("/category", categoryRouter);
+app.use("/bill",billRouter);
+app.use("/cart",cartRouter);
 
 app.listen(PORT, (req, res) => {
     connect();
