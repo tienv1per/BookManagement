@@ -1,0 +1,155 @@
+# GET http://localhost:8000/book/60abb72c33f9b833f8fdb07b HTTP/1.1
+# GET http://localhost:8000/book/totalpage HTTP/1.1
+
+
+
+
+
+
+
+
+# GET http://localhost:8000/admin/deletebook/6568a84f36e26c4848c5714c HTTP/1.1
+
+#  GET http://localhost:8000/author HTTP/1.1
+
+#  GET http://localhost:8000/author/name/60abb5e43be8d82674051cab HTTP/1.1
+
+#  GET http://localhost:8000/publisher/ HTTP/1.1
+
+#  GET http://localhost:8000/publisher/name/60abb5b13be8d82674051ca7 HTTP/1.1
+
+#  GET http://localhost:8000/category/ HTTP/1.1
+
+#  GET http://localhost:8000/category/name/60abb5933be8d82674051ca3 HTTP/1.1
+
+      # id_category,
+      # name,
+      # price,
+      # release_date,
+      # img,
+      # describe,
+      # id_nsx,
+      # id_author,
+
+# name, id_category, price, release_date, describe, category, urlImg
+# POST http://localhost:8000/admin/updatebook/60abb72c33f9b833f8fdb07b HTTP/1.1
+# content-type: application/json
+
+# {
+#     "name": "abcsc",
+#     "id_category": "60abb5e43be8d8267405fewwb",   
+#     "price": 100,
+#     "release_date": "2023-11-30T00:00:00.000+00:00",
+#     "describe": "a adfjaod fad",
+#     "category":"fawiria",
+#     "urlImg": "https://img.img"
+# }
+
+
+# POST http://localhost:8000/admin/addbook/ HTTP/1.1
+# content-type: application/json
+
+# {
+    
+#     "id_category": "60abb5e43be8d8267405feabc",
+#     "name": "Ma",   
+#     "price": 100,
+#     "release_date": "2023-11-30T00:00:00.000+00:00",
+#     "urlImg": "https://img.img",
+#     "describe": "Sách hay",
+#     "id_nsx": "Kim Đồng",
+#     "id_author": "Tố hữu"
+    
+# }
+
+
+# POST http://localhost:8000/bill/add HTTP/1.1
+# content-type: application/json
+
+# {
+#     "id_user": "60afbb5c6e9c202868e230a4",
+#     "id_product": "60abc5c97661e430b0191103" 
+# }
+
+#  GET http://localhost:8000/bill/verify/3E9bLL2plXWc3RIChTK7Anpd0BY4 HTTP/1.1
+
+#  GET http://localhost:8000/bill/60b052ce4ba6ec177c94a114 HTTP/1.1
+
+#  GET http://localhost:8000/bill/delete/60b053208f166f0abc40124b HTTP/1.1
+
+#  GET http://localhost:8000/bill/top10 HTTP/1.1
+
+
+# POST http://localhost:8000/bill/statistical/revenue/day HTTP/1.1
+# content-type: application/json
+
+# {
+#     "day": "31",
+#     "month": "05",
+#     "year": "2021"
+# }
+
+
+# POST http://localhost:8000/bill/statistical/revenue/month HTTP/1.1
+# content-type: application/json
+
+# {
+#     "month": "05",
+#     "year": "2021"
+# }
+
+
+# POST http://localhost:8000/bill/statistical/revenue/year HTTP/1.1
+# content-type: application/json
+
+# {
+#     "year": "2021"
+# }
+
+#  GET http://localhost:8000/bill/status/99 HTTP/1.1
+
+#  GET http://localhost:8000/bill/status/1 HTTP/1.1
+
+
+#  GET http://localhost:8000/bill/status/0 HTTP/1.1
+
+# POST http://localhost:8000/bill/updateissend HTTP/1.1
+# content-type: application/json
+
+# {
+#     "id": "60afcff13f319427446004c1",
+#     "issend":"0"
+# }
+
+#  GET http://localhost:8000/book/allbook?nsx=haiz HTTP/1.1
+
+# POST http://localhost:8000/cart/addtocard HTTP/1.1
+# content-type: application/json
+
+# {
+#     "id_user": "60afbb5c6e9c202868e230a4",
+#     "id_product": "60abc6067661e430b0191105",
+#     "count": 5  
+
+# }
+
+# id_user
+#  GET http://localhost:8000/cart/60afbb5c6e9c202868e230a4 HTTP/1.1
+
+
+# POST http://localhost:8000/cart/update HTTP/1.1
+# content-type: application/json
+
+# {
+#     "id_user": "60afbb5c6e9c202868e230a4",
+#     "id_product": "60abc6067661e430b0191105",
+#     "count": 10
+# }
+
+# POST http://localhost:8000/cart/delete HTTP/1.1
+# content-type: application/json
+
+# {
+#     "id_user": "60afbb5c6e9c202868e230b4",
+#     "id_product": "60abc5c97661e430b0191103"
+# }

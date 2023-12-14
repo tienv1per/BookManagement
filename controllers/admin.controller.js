@@ -4,107 +4,69 @@ const user = require("../models/users");
 const category = require("../models/category.model");
 const author = require("../models/author.model");
 const publisher = require("../models/publisher.model");
-// const nxs = require("../models/nsx.model");
+const nsx = require("../models/nsx.model");
 const fs = require('fs');
 const path = require('path');
 
-// const uploadImg = async (path) => {
-//   let res;
-//   try {
-//     res = await cloudinary.uploader.upload(path);
-//   } catch (err) {
-//     console.log(err);
-//     return false;
-//   }
-//   return res.secure_url;
-// };
-const uploadImg = async (file) => {
-  // Đảm bảo file không rỗng
-  if (!file) {
-    console.log('Không có tệp tin để tải lên.');
-    return false;
+exports.addBook = async (req, res) => {
+  const {
+    id_category,
+    name,
+    price,
+    release_date,
+    urlImg, 
+    describe,
+    id_nsx,
+    id_author,
+  } = req.body;
+  console.log(id_category, name, price, release_date,urlImg, describe, id_nsx, id_author);
+
+  // Check if required fields are present
+  if (
+    typeof name === "undefined" ||
+    typeof id_category === "undefined" ||
+    typeof price === "undefined" ||
+    typeof release_date === "undefined" ||
+    typeof urlImg === "undefined" ||
+    typeof describe === "undefined" ||
+    typeof id_nsx === "undefined" ||
+    typeof id_author === "undefined"
+  ) {
+    res.status(422).json({ msg: "Invalid data" });
+    return;
   }
 
-  const uploadDirectory = 'uploads'; // Thay đổi đường dẫn thư mục lưu trữ của bạn
-
-  // Tạo thư mục nếu nó chưa tồn tại
-  if (!fs.existsSync(uploadDirectory)) {
-    fs.mkdirSync(uploadDirectory);
+  // Validate release_date as a date
+  if (isNaN(Date.parse(release_date))) {
+    res.status(422).json({ msg: "Invalid release_date format" });
+    return;
   }
 
-  const filename = `${Date.now()}-${file.originalname}`;
-  const filePath = path.join(uploadDirectory, filename);
+  // Create a new book instance
+  const newBook = new book({
+    id_category,
+    name,
+    price,
+    release_date,
+    img: urlImg, // Change to img to match your schema
+    describe,
+    id_nsx,
+    id_author,
+  });
 
   try {
-    // Sử dụng stream để ghi file lên máy cục bộ
-    const fileStream = fs.createWriteStream(filePath);
-    fileStream.write(file.buffer);
-    fileStream.end();
+    await newBook.save();
+    res.status(201).json({ msg: "Book added successfully" });
   } catch (err) {
-    console.log(err);
-    return false;
+    res.status(500).json({ msg: "Server error" });
   }
-
-  // Trả về đường dẫn tới tệp tin đã được lưu trữ cục bộ
-  return filePath;
 };
 
-exports.addBook = async (req, res) => {
-    // if (
-    //   typeof req.file === "undefined" ||
-    //   typeof req.body.name === "undefined" ||
-    //   typeof req.body.id_category === "undefined" ||
-    //   typeof req.body.price === "undefined" ||
-    //   typeof req.body.release_date === "undefined" ||
-    //   typeof req.body.describe === "undefined" ||
-    //   typeof req.body.id_nsx === "undefined" ||
-    //   typeof req.body.id_author === "undefined"
-    // ) {
-    //   console.log(req.body.name);
-    //   res.status(422).json({ msg: "Invalid data" });
-    //   return;
-    // }
-    const {
-      id_category,
-      name,
-      price,
-      release_date,
-      describe,
-      id_nsx,
-      id_author,
-    } = req.body;
-    console.log(id_category, name, price,release_date,describe,id_nsx, id_author);
-    let urlImg = await uploadImg(req.file.path);
-    if (urlImg === false) {
-      res.status(500).json({ msg: "server error" });
-      return;
-    }
-    const newBook = new book({
-      id_category: id_category,
-      name: name,
-      price: price,
-      release_date: release_date,
-      img: urlImg,
-      describe: describe,
-      id_nsx: id_nsx,
-      id_author: id_author,
-    });
-    try {
-      newBook.save();
-    } catch (err) {
-      res.status(500).json({ msg: "server error" });
-      return;
-    }
-    fs.unlink(req.file.path, (err) => {
-      if (err) throw err;
-    });
-    res.status(201).json({ msg: "success" });
-  };
-
+  
   exports.updateBook = async (req, res) => {
     if (
       typeof req.body.name === "undefined" ||
-      typeof req.body.id === "undefined" ||
+      typeof req.params.id === "undefined" ||
       typeof req.body.id_category === "undefined" ||
       typeof req.body.price === "undefined" ||
       typeof req.body.release_date === "undefined" ||
@@ -113,9 +75,14 @@ exports.addBook = async (req, res) => {
       res.status(422).json({ msg: "Invalid data" });
       return;
     }
-    let { name, id, id_category, price, release_date, describe, category } =
+  
+    console.log(1);
+    let id = req.params.id;
+    let { name, id_category, price, release_date, describe, category, urlImg } =
       req.body;
+  
     let bookFind;
+  
     try {
       bookFind = await book.findById(id);
     } catch (err) {
@@ -123,21 +90,11 @@ exports.addBook = async (req, res) => {
       res.status(500).json({ msg: err });
       return;
     }
+  
     if (bookFind === null) {
       res.status(404).json({ msg: "Not found" });
       return;
     }
-    let urlImg = null;
-    if (typeof req.file !== "undefined") {
-      urlImg = await uploadImg(req.file.path);
-    }
-    if (urlImg !== null) {
-      if (urlImg === false) {
-        res.status(500).json({ msg: "server error" });
-        return;
-      }
-    }
-    if (urlImg === null) urlImg = bookFind.img;
   
     bookFind.id_category = id_category;
     bookFind.name = name;
@@ -146,13 +103,14 @@ exports.addBook = async (req, res) => {
     bookFind.describe = describe;
     bookFind.category = category;
     bookFind.img = urlImg;
-    bookFind.save((err, docs) => {
-      if (err) {
-        console.log(err);
-      }
-    });
   
-    res.status(200).json({ msg: "success", data: bookFind });
+    try {
+      await bookFind.save();
+      res.status(200).json({ msg: "success", data: bookFind });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ msg: "Error saving data" });
+    }
   };
   
   exports.deletebook = async (req, res) => {
