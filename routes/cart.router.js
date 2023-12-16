@@ -4,7 +4,7 @@ const cart_controller = require("../controllers/cart.controller");
 const router = express.Router();
 
 
-router.post("/addtocard", cart_controller.addToCart);
+router.post("/addtocart", cart_controller.addToCart);
 
 router.get("/:id_user", cart_controller.getAll);
 
