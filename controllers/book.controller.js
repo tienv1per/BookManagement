@@ -62,7 +62,7 @@ exports.getAllBook = async (req, res) => {
         res.status(500).json({ msg: err });
        return;
     }
- 
+    if(searchText || searchAuthor || searchCategory || searchnsx){
         var query = {
             $and: [
             ]
@@ -83,6 +83,10 @@ exports.getAllBook = async (req, res) => {
             query.$and.push({ id_nsx: searchnsx });
           }
           Object.keys(query).forEach(key => query[key] === "" && delete query[key]);
+        }
+        else{
+            query = {};
+        }
 
             book
                 .find(query)
