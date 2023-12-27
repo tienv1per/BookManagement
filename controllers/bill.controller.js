@@ -2,6 +2,7 @@
 const bill = require("../models/bill.model");
 const book = require("../models/book.model");
 const cart = require("../models/cart.model");
+const user = require("../models/users");
 const randomstring = require("randomstring");
 // const nodemailer = require("../utils/nodemailer");
 
@@ -9,28 +10,25 @@ const randomstring = require("randomstring");
 exports.addBill = async (req, res) => {
     if (
       typeof req.body.id_user === "undefined" ||
-      typeof req.body.address === "undefined" ||
-      typeof req.body.phone === "undefined" ||
-      typeof req.body.name === "undefined" ||
-      typeof req.body.total === "undefined" ||
-      typeof req.body.email === "undefined" ||
       typeof req.body.id_product === "undefined"
     ) {
       res.status(422).json({ msg: "Invalid data" });
       return;
     }
   
-    const { id_user, address, total, phone, name, email, id_product } = req.body;
+    const { id_user, id_product } = req.body;
   
     try {
       // Kiểm tra xem giỏ hàng của người dùng có tồn tại không
       const cartFind = await cart.findOne({ id_user: id_user });
-  
+      const userfind = await user.findOne({ _id: id_user });
       if (cartFind === null) {
         res.status(404).json({ msg: "Cart not found" });
         return;
       }
   
+      let total = 0;
+      
       // Tìm thông tin sản phẩm theo id_product
       const product_info = await book.findOne({ _id: id_product });
   
@@ -40,11 +38,13 @@ exports.addBill = async (req, res) => {
         return;
       }
   
+      
       // Tạo mã token ngẫu nhiên cho hóa đơn
       const token = randomstring.generate();
       const productIndex = cartFind.products.findIndex(
         (element) => element._id === id_product
       );
+      total = product_info.price * cartFind.products[productIndex].count;
     //   console.log(cartFind.products[productIndex].count);
       // Tạo đối tượng hóa đơn mới
       const new_bill = new bill({
@@ -57,10 +57,9 @@ exports.addBill = async (req, res) => {
             describe: product_info.describe,
             id_nsx: product_info.id_nsx,
             count: cartFind.products[productIndex].count}, // Sử dụng mảng để chứa thông tin sản phẩm và số lượng
-        address: address,
-        phone: phone,
-        name: name,
-        email: email,
+        address: userfind.address,
+        phone: userfind.phone_number,
+        email: userfind.email,
         total: total,
         token: token,
         // count: cartFind.products[productIndex].count
@@ -133,6 +132,37 @@ exports.getBillByIDUser = async (req, res) => {
   }
 
   res.status(200).json({ data: billFind });
+};
+
+exports.getBillById = async (req, res) => {
+  if (typeof req.params.id_bill === "undefined") {
+    res.status(402).json({ msg: "data invalid" });
+    return;
+  }
+  let billFind = null;
+  try {
+    billFind = await bill
+      .find({ _id: req.params.id_bill })
+      .sort({ date: -1 });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: "Server error" });
+    return;
+  }
+  console.log(billFind);
+
+  res.status(200).json({ data: billFind });
+};
+
+
+exports.getAllBill = async (req, res) => {
+  try {
+    const allBills = await bill.find().sort({ date: -1 });
+    res.status(200).json({ data: allBills });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
 };
 
 
