@@ -4,7 +4,9 @@ const bill_controller = require('../controllers/bill.controller');
 
 router.post("/add", bill_controller.addBill);
 router.get("/verify/:token", bill_controller.verifyPayment);
-router.get("/:id_user", bill_controller.getBillByIDUser);
+router.get("/user/:id_user", bill_controller.getBillByIDUser);
+router.get("/allbill", bill_controller.getAllBill);
+router.get("/:id_bill", bill_controller.getBillById);
 router.get("/delete/:id", bill_controller.deleteBill);
 router.post("/statistical/revenue/day", bill_controller.statisticaRevenueDay);
 router.post("/statistical/revenue/month", bill_controller.statisticaRevenueMonth);
