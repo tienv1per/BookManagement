@@ -21,8 +21,101 @@ exports.getTotalPage = (req, res) => {
         });
 };
 
+// exports.getAllBook = async (req, res) => {
+//     //Search Text
+//     let searchText = "";
+//     if (typeof req.query.searchtext !== 'undefined') {
+//         searchText = req.query.searchtext;
+//     }
+
+
+//     let searchAuthor = "";
+//     if (typeof req.query.author !== 'undefined') {
+//         searchAuthor = req.query.author;
+//         searchAuthor = await authorController.getIDBySearchText(searchAuthor);
+//     }
+
+//     let searchCategory = "";
+//     if (typeof req.query.category !== 'undefined') {
+//         searchCategory = req.query.category;
+//         searchCategory = await categoryController.getIDBySearchText(searchCategory);
+//     }
+
+//     let searchnsx = "";
+//     if (typeof req.query.nsx !== 'undefined') {
+//         searchnsx = req.query.nsx;
+//         searchnsx = await nsxController.getIDBySearchText(searchnsx);
+//     }
+
+//     if(searchText==="" && searchAuthor==="" && searchCategory==="" && searchnsx===""){
+
+//     }
+//     if(searchText || searchAuthor || searchCategory || searchnsx){
+//         var query = {
+//             $and: [
+//             ]
+//           };
+//           if (searchText !== undefined && searchText !== "") {
+//             query.$and.push({ name: searchText });
+//           }
+
+//           if (searchAuthor !== undefined && searchAuthor !== "") {
+//             query.$and.push({ id_author: searchAuthor });
+//           }
+          
+//           if (searchCategory !== undefined && searchCategory !== "") {
+//             query.$and.push({ id_category: searchCategory });
+//           }
+          
+//           if (searchnsx !== undefined && searchnsx !== "") {
+//             query.$and.push({ id_nsx: searchnsx });
+//           }
+//           Object.keys(query).forEach(key => query[key] === "" && delete query[key]);
+//         }
+//         else{
+//             query = {};
+//         }
+
+
+//         try {
+//             let books = await book
+//                 .find({
+//                     $or: [
+//                         { name: new RegExp(searchText, "i") },
+//                         { id_nsx: { $in: searchnsx } },
+//                         { id_category: { $in: searchCategory } },
+//                         { id_author: { $in: searchAuthor } }                       
+//                     ]
+//                 })
+//                 .lean();
+        
+//             // Filter out the books that don't match the conditions
+//             books = books.filter(book => {
+//                 if (searchText && !new RegExp(searchText, "i").test(book.name)) {
+//                     return false;
+//                 }
+//                 if (searchnsx && !searchnsx.includes(book.id_nsx)) {
+//                     return false;
+//                 }
+//                 if (searchCategory && !searchCategory.includes(book.id_category)) {
+//                     return false;
+//                 }
+//                 if (searchAuthor && !searchAuthor.includes(book.id_author)) {
+//                     return false;
+//                 }
+//                 return true;
+//             });
+        
+//             res.status(200).json({ data: books });
+//         } catch (err) {
+//             console.log(err);
+//             res.status(500).json({ msg: err.message });
+//         }
+//         }
+
+
 exports.getAllBook = async (req, res) => {
-    //Search Text
+    // Search Text
     let searchText = "";
     if (typeof req.query.searchtext !== 'undefined') {
         searchText = req.query.searchtext;
@@ -48,57 +141,71 @@ exports.getAllBook = async (req, res) => {
     }
 
 
-    let bookCount = null;
-     try {
-    //     if (range !== null) {
-            bookCount = await book
-                .count({ $or: [{ name: new RegExp(searchText, "i") }, { id_nsx: { $in: searchnsx } }, { id_author: { $in: searchAuthor } }, { id_category: { $in: searchCategory } }, { name: { $in: searchText } }] });
-         }
-    //     else {
-    //         bookCount = await book.count({ $or: [{ name: new RegExp(searchText, "i") }, { id_nsx: { $in: searchnsx } }, { id_author: { $in: searchAuthor } }, { id_category: { $in: searchCategory } }] });
-    //     }
-    // }
-    catch (err) {
-        res.status(500).json({ msg: err });
-       return;
-    }
-    if(searchText || searchAuthor || searchCategory || searchnsx){
-        var query = {
-            $and: [
-            ]
-          };
-          if (searchText !== undefined && searchText !== "") {
-            query.$and.push({ name: searchText });
-          }
+    try {
+        let query = {};
 
-          if (searchAuthor !== undefined && searchAuthor !== "") {
-            query.$and.push({ id_author: searchAuthor });
-          }
-          
-          if (searchCategory !== undefined && searchCategory !== "") {
-            query.$and.push({ id_category: searchCategory });
-          }
-          
-          if (searchnsx !== undefined && searchnsx !== "") {
-            query.$and.push({ id_nsx: searchnsx });
-          }
-          Object.keys(query).forEach(key => query[key] === "" && delete query[key]);
-        }
-        else{
-            query = {};
+        if (searchText !== "") {
+            query.name = new RegExp(searchText, "i");
         }
 
-            book
-                .find(query)
-                .lean()
-                .then(docs => {
-                res.status(200).json({ data: docs });
-                })         
-            .catch(err => {
-            console.log(err);
-            res.status(500).json({ msg: err });
+        if (searchAuthor !== "") {
+            query.id_author = searchAuthor;
+        }
+
+        if (searchCategory !== "") {
+            query.id_category = searchCategory;
+        }
+
+        if (searchnsx !== "") {
+            query.id_nsx = searchnsx;
+        }
+
+        let books;
+        if(query===""){
+            books = await book.find().lean();
+            res.status(200).json({ data: books });
+        }
+        else {
+        if (Object.keys(query).length > 0) {
+            books = await book
+                .find({
+                    $or: [
+                        { name: new RegExp(searchText, "i") },
+                        { id_nsx: { $in: searchnsx } },
+                        { id_category: { $in: searchCategory } },
+                        { id_author: { $in: searchAuthor } }
+                    ]
+                })
+                .lean();
+
+            // Filter out the books that don't match the conditions
+            books = books.filter(book => {
+                if (searchText && !new RegExp(searchText, "i").test(book.name)) {
+                    return false;
+                }
+                if (searchnsx && !searchnsx.includes(book.id_nsx)) {
+                    return false;
+                }
+                if (searchCategory && !searchCategory.includes(book.id_category)) {
+                    return false;
+                }
+                if (searchAuthor && !searchAuthor.includes(book.id_author)) {
+                    return false;
+                }
+                return true;
             });
+        } else {
+            // If no search query, return all books
+            books = await book.find().lean();
         }
+
+        res.status(200).json({ data: books });
+    }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ msg: err.message });
+    }
+}
 
 
 
