@@ -70,7 +70,8 @@ exports.addBook = async (req, res) => {
       typeof req.body.id_category === "undefined" ||
       typeof req.body.price === "undefined" ||
       typeof req.body.release_date === "undefined" ||
-      typeof req.body.describe === "undefined"
+      typeof req.body.describe === "undefined" ||
+      typeof req.body.urlImg === "undefined"
     ) {
       res.status(422).json({ msg: "Invalid data" });
       return;
@@ -78,7 +79,7 @@ exports.addBook = async (req, res) => {
   
     console.log(1);
     let id = req.params.id;
-    let { name, id_category, price, release_date, describe, category, urlImg } =
+    let { name, id_category, price, release_date, describe, urlImg } =
       req.body;
   
     let bookFind;
@@ -101,7 +102,6 @@ exports.addBook = async (req, res) => {
     bookFind.price = parseFloat(price);
     bookFind.release_date = release_date;
     bookFind.describe = describe;
-    bookFind.category = category;
     bookFind.img = urlImg;
   
     try {
