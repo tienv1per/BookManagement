@@ -12,6 +12,7 @@ const adminRouter = require('./routes/admin.router');
 const categoryRouter = require('./routes/category.router');
 const billRouter = require('./routes/bill.router');
 const cartRouter =  require('./routes/cart.router');
+const nsxRouter = require('./routes/nsx.router');
 
 dotenv.config();
 const app = express();
@@ -44,7 +45,7 @@ app.use("/admin", adminRouter);
 app.use("/category", categoryRouter);
 app.use("/bill",billRouter);
 app.use("/cart",cartRouter);
-
+app.use("/nsx", nsxRouter);
 app.listen(PORT, (req, res) => {
     connect();
     console.log(`Listening on ${PORT}`);
