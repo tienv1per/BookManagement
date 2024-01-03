@@ -31,6 +31,7 @@ const bill = new Schema({
   },
   total: Number,
   address: String,
+  email: String,
   phone: String,
   name: String,
   token: String,
