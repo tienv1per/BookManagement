@@ -16,12 +16,17 @@ exports.addBill = async (req, res) => {
       return;
     }
   
+    if(req.body.address===""){
+      res.status(422).json({ msg: "Vui lòng thêm thông tin address" });
+    }
+    let address = req.body.address;
     const { id_user, id_product } = req.body;
   
     try {
       // Kiểm tra xem giỏ hàng của người dùng có tồn tại không
       const cartFind = await cart.findOne({ id_user: id_user });
       const userfind = await user.findOne({ _id: id_user });
+      console.log(userfind.email);
       if (cartFind === null) {
         res.status(404).json({ msg: "Cart not found" });
         return;
@@ -47,6 +52,7 @@ exports.addBill = async (req, res) => {
       total = product_info.price * cartFind.products[productIndex].count;
     //   console.log(cartFind.products[productIndex].count);
       // Tạo đối tượng hóa đơn mới
+      console.log(userfind.name, userfind.address);
       const new_bill = new bill({
         id_user: id_user,
         products: { id_category: product_info.id_category,
@@ -58,7 +64,8 @@ exports.addBill = async (req, res) => {
             id_nsx: product_info.id_nsx,
             count: cartFind.products[productIndex].count}, // Sử dụng mảng để chứa thông tin sản phẩm và số lượng
         address: userfind.address,
-        phone: userfind.phone_number,
+        name: userfind.name,
+        phone: userfind.phone,
         email: userfind.email,
         total: total,
         token: token,
