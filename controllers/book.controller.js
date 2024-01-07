@@ -190,20 +190,23 @@ exports.createComment = async (req, res, next) => {
       const { content, score } = req.body;
       const decoded = jwtDecode(token);
 
+      console.log("123");
+
       const newComment = await commentModel({
         content: content,
         score: score,
         book_id: bookId,
         user_id: decoded.id,
       });
+      console.log("new comment", newComment);
       await newComment.save();
-
+      console.log("456");
       await book.updateOne(
         { _id: bookId }, 
         { $push: { comments: newComment._id } });
       return res.status(200).json(newComment);
   } catch (error) {
-      console.log("Error creating comment");
+      console.log("Error creating comment", error);
       return res.status(500).json(error);
   }
 }
