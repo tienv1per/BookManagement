@@ -10,7 +10,7 @@ const randomstring = require("randomstring");
 exports.addBill = async (req, res) => {
     if (
       typeof req.body.id_user === "undefined" ||
-      typeof req.body.id_product === "undefined"
+      typeof req.body.products === "undefined" === "undefined"
     ) {
       res.status(422).json({ msg: "Invalid data" });
       return;
@@ -20,7 +20,7 @@ exports.addBill = async (req, res) => {
       res.status(422).json({ msg: "Vui lòng thêm thông tin address" });
     }
     let address = req.body.address;
-    const { id_user, id_product } = req.body;
+    const { id_user, products } = req.body;
   
     try {
       // Kiểm tra xem giỏ hàng của người dùng có tồn tại không
@@ -33,63 +33,76 @@ exports.addBill = async (req, res) => {
       }
   
       let total = 0;
-      
-      // Tìm thông tin sản phẩm theo id_product
-      const product_info = await book.findOne({ _id: id_product });
-  
-      // Kiểm tra xem sản phẩm có tồn tại không
-      if (product_info === null) {
-        res.status(404).json({ msg: "Product not found" });
-        return;
-      }
-  
-      
       // Tạo mã token ngẫu nhiên cho hóa đơn
       const token = randomstring.generate();
-      const productIndex = cartFind.products.findIndex(
-        (element) => element._id === id_product
-      );
-      total = product_info.price * cartFind.products[productIndex].count;
-    //   console.log(cartFind.products[productIndex].count);
-      // Tạo đối tượng hóa đơn mới
-      console.log(userfind.name, userfind.address);
-      const new_bill = new bill({
-        id_user: id_user,
-        products: { id_category: product_info.id_category,
-            name: product_info.name,
-            price: product_info.price,
-            release_date: product_info.release_date,
-            img: product_info.img,
-            describe: product_info.describe,
-            id_nsx: product_info.id_nsx,
-            count: cartFind.products[productIndex].count}, // Sử dụng mảng để chứa thông tin sản phẩm và số lượng
-        address: userfind.address,
-        name: userfind.name,
-        phone: userfind.phone,
-        email: userfind.email,
-        total: total,
-        token: token,
-        // count: cartFind.products[productIndex].count
-      });
-  
-      // Lưu hóa đơn vào cơ sở dữ liệu
-      await new_bill.save();
-  
-      // Xóa sản phẩm từ giỏ hàng sau khi tạo hóa đơn
- 
-  
-      if (productIndex !== -1) {
-        cartFind.products.splice(productIndex, 1);
+      // Tạo mảng để lưu thông tin sản phẩm trong hóa đơn
+        const productsArray = [];
+
+        for (const product of products) {
+          // Tìm thông tin sản phẩm và số lượng từ giỏ hàng
+          const cartProduct = cartFind.products.find((element) => element._id === product);
+
+          if (!cartProduct) {
+              res.status(404).json({ msg: "Product not found in the cart" });
+              return;
+          }
+            // Tìm thông tin sản phẩm theo id_product
+          const product_info = await book.findOne({ _id: product });
+
+            if (product_info === null) {
+                res.status(404).json({ msg: "Product not found" });
+                return;
+            }
+
+            total += product_info.price * cartProduct.count;
+
+            // Thêm thông tin sản phẩm vào mảng
+            productsArray.push({
+                id_category: product_info.id_category,
+                name: product_info.name,
+                price: product_info.price,
+                release_date: product_info.release_date,
+                img: product_info.img,
+                describe: product_info.describe,
+                id_nsx: product_info.id_nsx,
+                count: product.count
+            });
+        }
+
+        // Tạo đối tượng hóa đơn mới
+        console.log(userfind.name, userfind.address);
+        const new_bill = new bill({
+            id_user: id_user,
+            products: productsArray,
+            address: userfind.address,
+            name: userfind.name,
+            phone: userfind.phone,
+            email: userfind.email,
+            total: total,
+            token: token,
+        });
+
+        // Lưu hóa đơn vào cơ sở dữ liệu
+        await new_bill.save();
+
+        // Xóa sản phẩm từ giỏ hàng sau khi tạo hóa đơn
+        for (const product of products) {
+            const productIndex = cartFind.products.findIndex(
+                (element) => element._id === product.id_product
+            );
+            if (productIndex !== -1) {
+                cartFind.products.splice(productIndex, 1);
+            }
+        }
         await cartFind.save();
-      }
-  
-      // Trả về thành công
-      res.status(201).json({ msg: "Success" });
+
+        // Trả về thành công
+        res.status(201).json({ msg: "Success" });
     } catch (err) {
-      console.log("Error:", err);
-      res.status(500).json({ msg: "Internal Server Error" });
+        console.log("Error:", err);
+        res.status(500).json({ msg: "Internal Server Error" });
     }
-  };
+  }
   
 
 exports.verifyPayment = async (req, res) => {
