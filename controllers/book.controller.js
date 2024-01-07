@@ -1,4 +1,5 @@
-const { jwtDecode } = require('jwt-decode');
+import "core-js/stable/atob";
+import { jwtDecode } from "jwt-decode";
 const author = require('../models/author.model');
 const category = require('../models/category.model');
 const nsx = require('../models/nsx.model');
