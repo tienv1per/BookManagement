@@ -1,5 +1,5 @@
 const jwtDecode = require("jwt-decode");
-require("core-js/stable/atob");
+import "core-js/stable/atob"; 
 const author = require('../models/author.model');
 const category = require('../models/category.model');
 const nsx = require('../models/nsx.model');
@@ -190,16 +190,16 @@ exports.createComment = async (req, res, next) => {
   try {
       console.log("debug");
       console.log(req.body);
-      const { content, score } = req.body;
-      const decoded = jwtDecode(token);
+      const { content, score, user_id } = req.body;
+    //   const decoded = jwtDecode(token);
 
-      console.log("123");
+    //   console.log("123");
 
       const newComment = await commentModel({
         content: content,
         score: score,
         book_id: bookId,
-        user_id: decoded.id,
+        user_id: user_id,
       });
       console.log("new comment", newComment);
       await newComment.save();
