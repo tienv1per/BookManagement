@@ -187,6 +187,8 @@ exports.createComment = async (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
 
   try {
+      console.log("debug");
+      console.log(req.body);
       const { content, score } = req.body;
       const decoded = jwtDecode(token);
 
