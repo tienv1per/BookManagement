@@ -189,9 +189,6 @@ exports.createComment = async (req, res, next) => {
       console.log("debug");
       console.log(req.body);
       const { content, score, user_id } = req.body;
-    //   const decoded = jwtDecode(token);
-
-    //   console.log("123");
 
       const newComment = await commentModel({
         content: content,
