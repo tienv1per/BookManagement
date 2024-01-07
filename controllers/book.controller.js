@@ -1,5 +1,3 @@
-const jwtDecode = require("jwt-decode");
-import "core-js/stable/atob"; 
 const author = require('../models/author.model');
 const category = require('../models/category.model');
 const nsx = require('../models/nsx.model');
@@ -185,7 +183,7 @@ exports.getRelatedBook = async (req, res) => {
 
 exports.createComment = async (req, res, next) => {
   const bookId = req.params.id;
-  const token = req.headers.authorization.split(" ")[1];
+  //const token = req.headers.authorization.split(" ")[1];
 
   try {
       console.log("debug");
@@ -239,12 +237,10 @@ exports.deleteComment = async (req, res, next) => {
 exports.updateComment = async (req, res, next) => {
   const id = req.params.id;
   const updateData = req.body;
-  const token = req.headers.authorization.split(" ")[1];
-  const decode = jwtDecode(token);
 
   try {
     const findComment = await commentModel.findById(id);
-    if(findComment.user_id !== decode.id) {
+    if(findComment.user_id !== 123) {
       return res.status(401).json("You dont have permission to delete this comment");
     }
     const comment = await commentModel.findByIdAndUpdate(
