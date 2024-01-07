@@ -183,11 +183,8 @@ exports.getRelatedBook = async (req, res) => {
 
 exports.createComment = async (req, res, next) => {
   const bookId = req.params.id;
-  //const token = req.headers.authorization.split(" ")[1];
 
   try {
-      console.log("debug");
-      console.log(req.body);
       const { content, score, user_id } = req.body;
 
       const newComment = await commentModel({
@@ -196,9 +193,7 @@ exports.createComment = async (req, res, next) => {
         book_id: bookId,
         user_id: user_id,
       });
-      console.log("new comment", newComment);
       await newComment.save();
-      console.log("456");
       await book.updateOne(
         { _id: bookId }, 
         { $push: { comments: newComment._id } });
@@ -233,12 +228,12 @@ exports.deleteComment = async (req, res, next) => {
 
 exports.updateComment = async (req, res, next) => {
   const id = req.params.id;
-  const updateData = req.body;
+  const {user_id, ...updateData} = req.body;
 
   try {
     const findComment = await commentModel.findById(id);
-    if(findComment.user_id !== 123) {
-      return res.status(401).json("You dont have permission to delete this comment");
+    if(findComment.user_id.toString() !== user_id) {
+      return res.status(401).json("You dont have permission to edit this comment");
     }
     const comment = await commentModel.findByIdAndUpdate(
       id,
