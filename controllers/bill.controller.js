@@ -55,7 +55,7 @@ exports.addBill = async (req, res) => {
             }
 
             total += product_info.price * cartProduct.count;
-
+            console.log(cartProduct.count);
             // Thêm thông tin sản phẩm vào mảng
             productsArray.push({
                 id_category: product_info.id_category,
@@ -65,7 +65,7 @@ exports.addBill = async (req, res) => {
                 img: product_info.img,
                 describe: product_info.describe,
                 id_nsx: product_info.id_nsx,
-                count: product.count
+                count: cartProduct.count
             });
         }
 
@@ -88,7 +88,7 @@ exports.addBill = async (req, res) => {
         // Xóa sản phẩm từ giỏ hàng sau khi tạo hóa đơn
         for (const product of products) {
             const productIndex = cartFind.products.findIndex(
-                (element) => element._id === product.id_product
+                (element) => element._id === product
             );
             if (productIndex !== -1) {
                 cartFind.products.splice(productIndex, 1);
